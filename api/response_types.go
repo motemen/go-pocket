@@ -1,8 +1,10 @@
 package api
 
 type RetrieveAPIResponse struct {
-	Status int
-	List   map[string]*Item
+	List     map[string]*Item
+	Status   int
+	Complete int
+	Since    int
 }
 
 type ItemStatus int
@@ -41,4 +43,14 @@ type Item struct {
 	Authors map[string]map[string]interface{}
 	Images  map[string]map[string]interface{}
 	Videos  map[string]map[string]interface{}
+}
+
+// URL is an alias for ResolvedURL
+func (item *Item) URL() string {
+	return item.ResolvedURL
+}
+
+// Title is an alias for ResolvedTitle
+func (item *Item) Title() string {
+	return item.ResolvedTitle
 }
