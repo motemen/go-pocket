@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/user"
+	"path/filepath"
 	"text/template"
 
 	"github.com/docopt/docopt-go"
@@ -21,6 +23,21 @@ var consumerKey string
 var defaultItemTemplate = template.Must(template.New("item").Parse(
 	`[{{.ItemId | printf "%9d"}}] {{.ResolvedTitle}} <{{.ResolvedURL}}>`,
 ))
+
+var configDir string
+
+func init() {
+	usr, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+
+	configDir = filepath.Join(usr.HomeDir, ".config", "pocket")
+	err = os.MkdirAll(configDir, 0777)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func main() {
 	usage := `A Pocket <getpocket.com> client.
@@ -89,8 +106,9 @@ func commandList(arguments map[string]interface{}, client *api.Client) {
 
 func restoreAccessToken() (*auth.OAuthAuthorizeAPIResponse, error) {
 	accessToken := &auth.OAuthAuthorizeAPIResponse{}
+	authFile := filepath.Join(configDir, "auth.json")
 
-	err := loadJSONFromFile(".auth_cache.json", accessToken)
+	err := loadJSONFromFile(authFile, accessToken)
 
 	if err != nil {
 		log.Println(err)
@@ -100,7 +118,7 @@ func restoreAccessToken() (*auth.OAuthAuthorizeAPIResponse, error) {
 			return nil, err
 		}
 
-		err = saveJSONToFile(".auth_cache.json", accessToken)
+		err = saveJSONToFile(authFile, accessToken)
 		if err != nil {
 			return nil, err
 		}
