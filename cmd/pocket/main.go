@@ -26,7 +26,14 @@ func main() {
 	usage := `A Pocket <getpocket.com> client.
 
 Usage:
-  pocket list [--format=<Go template>] [--domain=<domain>] [--search=<query>]
+  pocket list [--format=<template>] [--domain=<domain>] [--tag=<tag>] [--search=<query>]
+  pocket archive ( <id> | <url> )
+
+Options:
+  -f, --format <template> A Go template to show items.
+  -d, --domain <domain>   Filter items by its domain when listing.
+  -s, --search <query>    Search query when listing.
+  -t, --tag <tag>         Filter items by a tag when listing.
 `
 
 	arguments, err := docopt.Parse(usage, nil, true, version, false)
@@ -43,6 +50,8 @@ Usage:
 
 	if doList, ok := arguments["list"].(bool); ok && doList {
 		commandList(arguments, client)
+	} else {
+		panic("Not implemented")
 	}
 }
 
@@ -55,6 +64,10 @@ func commandList(arguments map[string]interface{}, client *api.Client) {
 
 	if search, ok := arguments["--search"].(string); ok {
 		options.Search = search
+	}
+
+	if tag, ok := arguments["--tag"].(string); ok {
+		options.Tag = tag
 	}
 
 	res, err := client.Retrieve(options)

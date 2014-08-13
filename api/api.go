@@ -1,13 +1,11 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
+	"log"
 	"net/http"
-	"net/url"
-	"strings"
-	"time"
 )
 
 var Origin = "https://getpocket.com"
@@ -50,59 +48,36 @@ const (
 	DetailTypeComplete            = "complete"
 )
 
+type FavoriteFilter string
+
+const (
+	FavoriteFilterUnspecified FavoriteFilter = ""
+	FavoriteFilterUnfavorited                = "0"
+	FavoriteFilterFavorited                  = "1"
+)
+
 type RetrieveAPIOption struct {
-	State       State
-	Favorite    bool
-	Tag         string
-	ContentType ContentType
-	Sort        Sort
-	DetailType  DetailType
-	Search      string
-	Domain      string
-	Since       time.Time
-	Count       int
-	Offset      int
+	State       State          `json:"state,omitempty"`
+	Favorite    FavoriteFilter `json:"favorite,omitempty"`
+	Tag         string         `json:"tag,omitempty"`
+	ContentType ContentType    `json:"contentType,omitempty"`
+	Sort        Sort           `json:"sort,omitempty"`
+	DetailType  DetailType     `json:"detailType,omitempty"`
+	Search      string         `json:"search,omitempty"`
+	Domain      string         `json:"domain,omitempty"`
+	Since       int            `json:"since,omitempty"`
+	Count       int            `json:"count,omitempty"`
+	Offset      int            `json:"offset,omitempty"`
 }
 
-type RetrieveAPIResponse struct {
-	Status int
-	List   map[string]*Item
+type AuthInfo struct {
+	ConsumerKey string `json:"consumer_key"`
+	AccessToken string `json:"access_token"`
 }
 
-type ItemStatus int
-
-const (
-	ItemStatusUnread   ItemStatus = 0
-	ItemStatusArchived            = 1
-	ItemStatusDeleted             = 2
-)
-
-type ItemMediaAttachment int
-
-const (
-	ItemMediaAttachmentNoMedia  ItemMediaAttachment = 0
-	ItemMediaAttachmentHasMedia                     = 1
-	ItemMediaAttachmentIsMedia                      = 2
-)
-
-type Item struct {
-	ItemId        int        `json:"item_id,string"`
-	ResolvedId    int        `json:"resolved_id,string"`
-	GivenURL      string     `json:"given_url"`
-	ResolvedURL   string     `json:"resolved_url"`
-	GivenTitle    string     `json:"given_title"`
-	ResolvedTitle string     `json:"resolved_title"`
-	Favorite      int        `json:",string"`
-	Status        ItemStatus `json:",string"`
-	Excerpt       string
-	IsArticle     int                 `json:"is_article,string"`
-	HasImage      ItemMediaAttachment `json:"has_image,string"`
-	HasVideo      ItemMediaAttachment `json:"has_video,string"`
-	WordCount     int                 `json:"word_count,string"`
-	Tags          []interface{}
-	Authors       []interface{}
-	Images        []interface{}
-	Videos        []interface{}
+type RetrieveAPIOptionWithAuth struct {
+	*RetrieveAPIOption
+	AuthInfo
 }
 
 // URL is an alias for ResolvedURL
@@ -122,57 +97,45 @@ func NewClient(consumerKey string, accessToken string) *Client {
 	}
 }
 
-func requestRaw(action string, params url.Values) (io.Reader, error) {
-	req, err := http.NewRequest("POST", Origin+action, strings.NewReader(params.Encode()))
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("X-Accept", "application/json")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("got response %d; X-Error=[%s]", resp.StatusCode, resp.Header.Get("X-Error"))
-	}
-
-	return resp.Body, nil
-}
-
-func Request(action string, params url.Values, v interface{}) error {
-	r, err := requestRaw(action, params)
+func RequestJSON(action string, params interface{}, v interface{}) error {
+	body, err := json.Marshal(params)
 	if err != nil {
 		return err
 	}
 
-	d := json.NewDecoder(r)
-	return d.Decode(v)
+	log.Println(string(body))
+
+	req, err := http.NewRequest("POST", Origin+action, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("X-Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("got response %d; X-Error=[%s]", resp.StatusCode, resp.Header.Get("X-Error"))
+	}
+
+	return json.NewDecoder(resp.Body).Decode(v)
 }
 
 func (c *Client) Retrieve(options *RetrieveAPIOption) (*RetrieveAPIResponse, error) {
-	params := url.Values{
-		"consumer_key": {c.ConsumerKey},
-		"access_token": {c.AccessToken},
-	}
-
-	if options.Domain != "" {
-		params.Add("domain", options.Domain)
-	}
-
-	if options.Search != "" {
-		params.Add("search", options.Search)
+	params := RetrieveAPIOptionWithAuth{
+		AuthInfo: AuthInfo{
+			ConsumerKey: c.ConsumerKey,
+			AccessToken: c.AccessToken,
+		},
+		RetrieveAPIOption: options,
 	}
 
 	res := &RetrieveAPIResponse{}
-	err := Request(
-		"/v3/get",
-		params,
-		res,
-	)
+	err := RequestJSON("/v3/get", params, res)
 	if err != nil {
 		return nil, err
 	}

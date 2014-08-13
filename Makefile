@@ -4,4 +4,10 @@ cmd: deps
 deps:
 	go get ./...
 
+test: testdeps
+	go test ./...
+
+testdeps:
+	go get -t ./...
+
 .PHONY: cmd deps
