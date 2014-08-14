@@ -18,7 +18,7 @@ type OAuthAuthorizeAPIResponse struct {
 
 func ObtainRequestToken(consumerKey, redirectURL string) (*OAuthRequestAPIResponse, error) {
 	res := &OAuthRequestAPIResponse{}
-	err := api.RequestJSON(
+	err := api.PostJSON(
 		"/v3/oauth/request",
 		map[string]string{
 			"consumer_key": consumerKey,
@@ -35,7 +35,7 @@ func ObtainRequestToken(consumerKey, redirectURL string) (*OAuthRequestAPIRespon
 
 func ObtainAccessToken(consumerKey string, requestToken *OAuthRequestAPIResponse) (*OAuthAuthorizeAPIResponse, error) {
 	res := &OAuthAuthorizeAPIResponse{}
-	err := api.RequestJSON(
+	err := api.PostJSON(
 		"/v3/oauth/authorize",
 		map[string]string{
 			"consumer_key": consumerKey,

@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"text/template"
 
 	"github.com/docopt/docopt-go"
@@ -21,7 +22,7 @@ var version = "0.1"
 var consumerKey string
 
 var defaultItemTemplate = template.Must(template.New("item").Parse(
-	`[{{.ItemId | printf "%9d"}}] {{.ResolvedTitle}} <{{.ResolvedURL}}>`,
+	`[{{.ItemID | printf "%9d"}}] {{.ResolvedTitle}} <{{.ResolvedURL}}>`,
 ))
 
 var configDir string
@@ -44,7 +45,7 @@ func main() {
 
 Usage:
   pocket list [--format=<template>] [--domain=<domain>] [--tag=<tag>] [--search=<query>]
-  pocket archive ( <id> | <url> )
+  pocket archive <item-id>
 
 Options:
   -f, --format <template> A Go template to show items.
@@ -65,8 +66,10 @@ Options:
 
 	client := api.NewClient(consumerKey, accessToken.AccessToken)
 
-	if doList, ok := arguments["list"].(bool); ok && doList {
+	if do, ok := arguments["list"].(bool); ok && do {
 		commandList(arguments, client)
+	} else if do, ok := arguments["archive"].(bool); ok && do {
+		commandArchive(arguments, client)
 	} else {
 		panic("Not implemented")
 	}
@@ -101,6 +104,21 @@ func commandList(arguments map[string]interface{}, client *api.Client) {
 	for _, item := range res.List {
 		_ = itemTemplate.Execute(os.Stdout, item)
 		fmt.Println("")
+	}
+}
+
+func commandArchive(arguments map[string]interface{}, client *api.Client) {
+	if itemIDString, ok := arguments["<item-id>"].(string); ok {
+		itemID, err := strconv.Atoi(itemIDString)
+		if err != nil {
+			panic(err)
+		}
+
+		action := api.NewArchiveAction(itemID)
+		res, err := client.Modify(action)
+		fmt.Println(res, err)
+	} else {
+		panic("Wrong arguments")
 	}
 }
 

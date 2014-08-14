@@ -61,15 +61,12 @@ type RetrieveAPIOptionWithAuth struct {
 
 func (c *Client) Retrieve(options *RetrieveAPIOption) (*RetrieveAPIResponse, error) {
 	params := RetrieveAPIOptionWithAuth{
-		AuthInfo: AuthInfo{
-			ConsumerKey: c.ConsumerKey,
-			AccessToken: c.AccessToken,
-		},
+		AuthInfo:          c.authInfo(),
 		RetrieveAPIOption: options,
 	}
 
 	res := &RetrieveAPIResponse{}
-	err := RequestJSON("/v3/get", params, res)
+	err := PostJSON("/v3/get", params, res)
 	if err != nil {
 		return nil, err
 	}

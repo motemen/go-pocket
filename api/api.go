@@ -28,19 +28,7 @@ func NewClient(consumerKey string, accessToken string) *Client {
 	}
 }
 
-func RequestJSON(action string, params interface{}, v interface{}) error {
-	body, err := json.Marshal(params)
-	if err != nil {
-		return err
-	}
-
-	log.Println(string(body))
-
-	req, err := http.NewRequest("POST", Origin+action, bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-
+func Do(req *http.Request, res interface{}) error {
 	req.Header.Add("X-Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 
@@ -53,5 +41,28 @@ func RequestJSON(action string, params interface{}, v interface{}) error {
 		return fmt.Errorf("got response %d; X-Error=[%s]", resp.StatusCode, resp.Header.Get("X-Error"))
 	}
 
-	return json.NewDecoder(resp.Body).Decode(v)
+	return json.NewDecoder(resp.Body).Decode(res)
+}
+
+func PostJSON(action string, params interface{}, res interface{}) error {
+	body, err := json.Marshal(params)
+	if err != nil {
+		return err
+	}
+
+	log.Println(string(body))
+
+	req, err := http.NewRequest("POST", Origin+action, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+
+	return Do(req, res)
+}
+
+func (c *Client) authInfo() AuthInfo {
+	return AuthInfo{
+		ConsumerKey: c.ConsumerKey,
+		AccessToken: c.AccessToken,
+	}
 }

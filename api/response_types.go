@@ -24,7 +24,7 @@ const (
 )
 
 type Item struct {
-	ItemId        int        `json:"item_id,string"`
+	ItemID        int        `json:"item_id,string"`
 	ResolvedId    int        `json:"resolved_id,string"`
 	GivenURL      string     `json:"given_url"`
 	ResolvedURL   string     `json:"resolved_url"`
