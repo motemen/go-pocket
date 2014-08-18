@@ -1,31 +1,34 @@
 package api
 
+// Action represents one action in a bulk modify requests.
 type Action struct {
 	Action string `json:"action"`
-	ItemId int    `json:"item_id,string"`
+	ItemID int    `json:"item_id,string"`
 }
 
-type ModifyAPIResponse struct {
+// NewArchiveAction creates an acrhive action.
+func NewArchiveAction(itemID int) *Action {
+	return &Action{
+		Action: "archive",
+		ItemID: itemID,
+	}
+}
+
+type ModifyResult struct {
 	ActionResults []bool
 	Status        int
 }
 
-type ModifyAPIOptionsWithAuth struct {
+type modifyAPIOptionsWithAuth struct {
 	Actions []*Action `json:"actions"`
-	AuthInfo
+	authInfo
 }
 
-func NewArchiveAction(itemId int) *Action {
-	return &Action{
-		Action: "archive",
-		ItemId: itemId,
-	}
-}
-
-func (c *Client) Modify(actions ...*Action) (*ModifyAPIResponse, error) {
-	res := &ModifyAPIResponse{}
-	data := ModifyAPIOptionsWithAuth{
-		AuthInfo: c.authInfo(),
+// Modify requests bulk modification on items.
+func (c *Client) Modify(actions ...*Action) (*ModifyResult, error) {
+	res := &ModifyResult{}
+	data := modifyAPIOptionsWithAuth{
+		authInfo: c.authInfo,
 		Actions:  actions,
 	}
 	err := PostJSON("/v3/send", data, res)

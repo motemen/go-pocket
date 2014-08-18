@@ -8,27 +8,30 @@ import (
 	"net/http"
 )
 
+// The API origin
 var Origin = "https://getpocket.com"
 
 // Client represents a Pocket client that grants OAuth access to your application
 type Client struct {
-	ConsumerKey string
-	AccessToken string
+	authInfo
 }
 
-type AuthInfo struct {
+type authInfo struct {
 	ConsumerKey string `json:"consumer_key"`
 	AccessToken string `json:"access_token"`
 }
 
-func NewClient(consumerKey string, accessToken string) *Client {
+// NewClient creates a new Pocket client.
+func NewClient(consumerKey, accessToken string) *Client {
 	return &Client{
-		ConsumerKey: consumerKey,
-		AccessToken: accessToken,
+		authInfo: authInfo{
+			ConsumerKey: consumerKey,
+			AccessToken: accessToken,
+		},
 	}
 }
 
-func Do(req *http.Request, res interface{}) error {
+func doJSON(req *http.Request, res interface{}) error {
 	req.Header.Add("X-Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 
@@ -44,8 +47,9 @@ func Do(req *http.Request, res interface{}) error {
 	return json.NewDecoder(resp.Body).Decode(res)
 }
 
-func PostJSON(action string, params interface{}, res interface{}) error {
-	body, err := json.Marshal(params)
+// PostJSON posts the data to the API endpoint, storing the result in res.
+func PostJSON(action string, data, res interface{}) error {
+	body, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
@@ -57,12 +61,5 @@ func PostJSON(action string, params interface{}, res interface{}) error {
 		return err
 	}
 
-	return Do(req, res)
-}
-
-func (c *Client) authInfo() AuthInfo {
-	return AuthInfo{
-		ConsumerKey: c.ConsumerKey,
-		AccessToken: c.AccessToken,
-	}
+	return doJSON(req, res)
 }

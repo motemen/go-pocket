@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"text/template"
 
@@ -75,8 +76,14 @@ Options:
 	}
 }
 
+type bySortId []api.Item
+
+func (s bySortId) Len() int           { return len(s) }
+func (s bySortId) Less(i, j int) bool { return s[i].SortId < s[j].SortId }
+func (s bySortId) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
 func commandList(arguments map[string]interface{}, client *api.Client) {
-	options := &api.RetrieveAPIOption{}
+	options := &api.RetrieveOption{}
 
 	if domain, ok := arguments["--domain"].(string); ok {
 		options.Domain = domain
@@ -101,8 +108,19 @@ func commandList(arguments map[string]interface{}, client *api.Client) {
 	} else {
 		itemTemplate = defaultItemTemplate
 	}
+
+	items := []api.Item{}
 	for _, item := range res.List {
-		_ = itemTemplate.Execute(os.Stdout, item)
+		items = append(items, item)
+	}
+
+	sort.Sort(bySortId(items))
+
+	for _, item := range items {
+		err := itemTemplate.Execute(os.Stdout, item)
+		if err != nil {
+			panic(err)
+		}
 		fmt.Println("")
 	}
 }
@@ -122,8 +140,8 @@ func commandArchive(arguments map[string]interface{}, client *api.Client) {
 	}
 }
 
-func restoreAccessToken() (*auth.OAuthAuthorizeAPIResponse, error) {
-	accessToken := &auth.OAuthAuthorizeAPIResponse{}
+func restoreAccessToken() (*auth.Authorization, error) {
+	accessToken := &auth.Authorization{}
 	authFile := filepath.Join(configDir, "auth.json")
 
 	err := loadJSONFromFile(authFile, accessToken)
@@ -145,7 +163,7 @@ func restoreAccessToken() (*auth.OAuthAuthorizeAPIResponse, error) {
 	return accessToken, nil
 }
 
-func obtainAccessToken() (*auth.OAuthAuthorizeAPIResponse, error) {
+func obtainAccessToken() (*auth.Authorization, error) {
 	ch := make(chan struct{})
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

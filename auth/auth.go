@@ -7,17 +7,17 @@ import (
 	"github.com/motemen/go-pocket/api"
 )
 
-type OAuthRequestAPIResponse struct {
+type RequestToken struct {
 	Code string `json:"code"`
 }
 
-type OAuthAuthorizeAPIResponse struct {
+type Authorization struct {
 	AccessToken string `json:"access_token"`
 	Username    string `json:"username"`
 }
 
-func ObtainRequestToken(consumerKey, redirectURL string) (*OAuthRequestAPIResponse, error) {
-	res := &OAuthRequestAPIResponse{}
+func ObtainRequestToken(consumerKey, redirectURL string) (*RequestToken, error) {
+	res := &RequestToken{}
 	err := api.PostJSON(
 		"/v3/oauth/request",
 		map[string]string{
@@ -33,8 +33,8 @@ func ObtainRequestToken(consumerKey, redirectURL string) (*OAuthRequestAPIRespon
 	return res, nil
 }
 
-func ObtainAccessToken(consumerKey string, requestToken *OAuthRequestAPIResponse) (*OAuthAuthorizeAPIResponse, error) {
-	res := &OAuthAuthorizeAPIResponse{}
+func ObtainAccessToken(consumerKey string, requestToken *RequestToken) (*Authorization, error) {
+	res := &Authorization{}
 	err := api.PostJSON(
 		"/v3/oauth/authorize",
 		map[string]string{
@@ -50,7 +50,7 @@ func ObtainAccessToken(consumerKey string, requestToken *OAuthRequestAPIResponse
 	return res, nil
 }
 
-func GenerateAuthorizationURL(requestToken *OAuthRequestAPIResponse, redirectURL string) string {
+func GenerateAuthorizationURL(requestToken *RequestToken, redirectURL string) string {
 	values := url.Values{"request_token": {requestToken.Code}, "redirect_uri": {redirectURL}}
 	return fmt.Sprintf("%s/auth/authorize?%s", api.Origin, values.Encode())
 }

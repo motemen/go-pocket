@@ -10,4 +10,4 @@ test: testdeps
 testdeps:
 	go get -t ./...
 
-.PHONY: cmd deps
+.PHONY: cmd deps test tesdeps
