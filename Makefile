@@ -1,5 +1,5 @@
 cmd: deps
-	go build -ldflags "-X main.consumerKey '$(POCKET_CONSUMER_KEY)'" ./cmd/pocket
+	go build ./cmd/pocket
 
 deps:
 	go get ./...

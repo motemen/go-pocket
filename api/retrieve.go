@@ -1,5 +1,6 @@
 package api
 
+// RetrieveOption is the options for retrieve API.
 type RetrieveOption struct {
 	State       State          `json:"state,omitempty"`
 	Favorite    FavoriteFilter `json:"favorite,omitempty"`
@@ -108,12 +109,12 @@ type Item struct {
 }
 
 // URL is an alias for ResolvedURL
-func (item *Item) URL() string {
+func (item Item) URL() string {
 	return item.ResolvedURL
 }
 
 // Title is an alias for ResolvedTitle
-func (item *Item) Title() string {
+func (item Item) Title() string {
 	return item.ResolvedTitle
 }
 

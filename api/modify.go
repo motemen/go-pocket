@@ -14,7 +14,9 @@ func NewArchiveAction(itemID int) *Action {
 	}
 }
 
+// ModifyResult represents the modify API's result.
 type ModifyResult struct {
+	// The results for each of the requested actions.
 	ActionResults []bool
 	Status        int
 }

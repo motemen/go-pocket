@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -20,10 +22,8 @@ import (
 
 var version = "0.1"
 
-var consumerKey string
-
 var defaultItemTemplate = template.Must(template.New("item").Parse(
-	`[{{.ItemID | printf "%9d"}}] {{.ResolvedTitle}} <{{.ResolvedURL}}>`,
+	`[{{.ItemID | printf "%9d"}}] {{.Title}} <{{.URL}}>`,
 ))
 
 var configDir string
@@ -60,7 +60,9 @@ Options:
 		panic(err)
 	}
 
-	accessToken, err := restoreAccessToken()
+	consumerKey := getConsumerKey()
+
+	accessToken, err := restoreAccessToken(consumerKey)
 	if err != nil {
 		panic(err)
 	}
@@ -76,11 +78,11 @@ Options:
 	}
 }
 
-type bySortId []api.Item
+type bySortID []api.Item
 
-func (s bySortId) Len() int           { return len(s) }
-func (s bySortId) Less(i, j int) bool { return s[i].SortId < s[j].SortId }
-func (s bySortId) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s bySortID) Len() int           { return len(s) }
+func (s bySortID) Less(i, j int) bool { return s[i].SortId < s[j].SortId }
+func (s bySortID) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 func commandList(arguments map[string]interface{}, client *api.Client) {
 	options := &api.RetrieveOption{}
@@ -114,7 +116,7 @@ func commandList(arguments map[string]interface{}, client *api.Client) {
 		items = append(items, item)
 	}
 
-	sort.Sort(bySortId(items))
+	sort.Sort(bySortID(items))
 
 	for _, item := range items {
 		err := itemTemplate.Execute(os.Stdout, item)
@@ -140,7 +142,16 @@ func commandArchive(arguments map[string]interface{}, client *api.Client) {
 	}
 }
 
-func restoreAccessToken() (*auth.Authorization, error) {
+func getConsumerKey() string {
+	consumerKeyFileContent, err := ioutil.ReadFile(filepath.Join(configDir, "consumer_key"))
+	if err != nil {
+		panic(err)
+	}
+
+	return string(bytes.SplitN(consumerKeyFileContent, []byte("\n"), 2)[0])
+}
+
+func restoreAccessToken(consumerKey string) (*auth.Authorization, error) {
 	accessToken := &auth.Authorization{}
 	authFile := filepath.Join(configDir, "auth.json")
 
@@ -149,7 +160,7 @@ func restoreAccessToken() (*auth.Authorization, error) {
 	if err != nil {
 		log.Println(err)
 
-		accessToken, err = obtainAccessToken()
+		accessToken, err = obtainAccessToken(consumerKey)
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +174,7 @@ func restoreAccessToken() (*auth.Authorization, error) {
 	return accessToken, nil
 }
 
-func obtainAccessToken() (*auth.Authorization, error) {
+func obtainAccessToken(consumerKey string) (*auth.Authorization, error) {
 	ch := make(chan struct{})
 	ts := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
