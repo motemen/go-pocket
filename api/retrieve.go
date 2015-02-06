@@ -1,5 +1,11 @@
 package api
 
+import (
+	"bytes"
+	"strconv"
+	"time"
+)
+
 // RetrieveOption is the options for retrieve API.
 type RetrieveOption struct {
 	State       State          `json:"state,omitempty"`
@@ -105,7 +111,24 @@ type Item struct {
 	Videos  map[string]map[string]interface{}
 
 	// Fields that are not documented but exist
-	SortId int `json:"sort_id"`
+	SortId        int  `json:"sort_id"`
+	TimeAdded     Time `json:"time_added"`
+	TimeUpdated   Time `json:"time_updated"`
+	TimeRead      Time `json:"time_read"`
+	TimeFavorited Time `json:"time_favorited"`
+}
+
+type Time time.Time
+
+func (t *Time) UnmarshalJSON(b []byte) error {
+	i, err := strconv.ParseInt(string(bytes.Trim(b, `"`)), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	*t = Time(time.Unix(i, 0))
+
+	return nil
 }
 
 // URL is an alias for ResolvedURL
