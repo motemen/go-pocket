@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -53,8 +52,6 @@ func PostJSON(action string, data, res interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	log.Println(string(body))
 
 	req, err := http.NewRequest("POST", Origin+action, bytes.NewReader(body))
 	if err != nil {
