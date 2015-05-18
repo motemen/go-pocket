@@ -47,12 +47,17 @@ func main() {
 Usage:
   pocket list [--format=<template>] [--domain=<domain>] [--tag=<tag>] [--search=<query>]
   pocket archive <item-id>
+  pocket add <url> [--title=<title>] [--tags=<tags>]
 
-Options:
+Options for list:
   -f, --format <template> A Go template to show items.
   -d, --domain <domain>   Filter items by its domain when listing.
   -s, --search <query>    Search query when listing.
   -t, --tag <tag>         Filter items by a tag when listing.
+
+Options for add:
+  --title <title>					A manually specified title for the article
+  --tags <tags>						A comma-separated list of tags
 `
 
 	arguments, err := docopt.Parse(usage, nil, true, version, false)
@@ -73,6 +78,8 @@ Options:
 		commandList(arguments, client)
 	} else if do, ok := arguments["archive"].(bool); ok && do {
 		commandArchive(arguments, client)
+	} else if do, ok := arguments["add"].(bool); ok && do {
+		commandAdd(arguments, client)
 	} else {
 		panic("Not implemented")
 	}
@@ -140,6 +147,32 @@ func commandArchive(arguments map[string]interface{}, client *api.Client) {
 	} else {
 		panic("Wrong arguments")
 	}
+}
+
+func commandAdd(arguments map[string]interface{}, client *api.Client) {
+	options := &api.AddOption{}
+
+	url, ok := arguments["<url>"].(string)
+	if !ok {
+		panic("Wrong arguments")
+	}
+
+	options.Url = url
+
+	if title, ok := arguments["--title"].(string); ok {
+		options.Title = title
+	}
+
+	if tags, ok := arguments["--tags"].(string); ok {
+		options.Tags = tags
+	}
+
+	err := client.Add(options)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Successfully added.")
 }
 
 func getConsumerKey() string {
