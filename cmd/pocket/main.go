@@ -56,8 +56,8 @@ Options for list:
   -t, --tag <tag>         Filter items by a tag when listing.
 
 Options for add:
-  --title <title>					A manually specified title for the article
-  --tags <tags>						A comma-separated list of tags
+  --title <title>         A manually specified title for the article
+  --tags <tags>           A comma-separated list of tags
 `
 
 	arguments, err := docopt.Parse(usage, nil, true, version, false)
