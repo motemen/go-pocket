@@ -157,7 +157,7 @@ func commandAdd(arguments map[string]interface{}, client *api.Client) {
 		panic("Wrong arguments")
 	}
 
-	options.Url = url
+	options.URL = url
 
 	if title, ok := arguments["--title"].(string); ok {
 		options.Title = title
