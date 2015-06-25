@@ -169,10 +169,9 @@ func commandAdd(arguments map[string]interface{}, client *api.Client) {
 
 	err := client.Add(options)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
-
-	fmt.Println("Successfully added.")
 }
 
 func getConsumerKey() string {
