@@ -9,7 +9,7 @@ Pocket (getpocket.com) API client for Go (golang).
 
 #### Use
 ```
-mkdir ~/.pocket/config
+mkdir ~/.config/pocket
 echo "MY_POCKET_API_CONSUMER_KEY" > ~/.pocket/config/consumer_key
 pocket list
 # Visit the URL listed in order to authenticate with Pocket
