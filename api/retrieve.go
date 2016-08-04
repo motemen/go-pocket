@@ -131,14 +131,22 @@ func (t *Time) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// URL is an alias for ResolvedURL
+// URL returns ResolvedURL or GivenURL
 func (item Item) URL() string {
-	return item.ResolvedURL
+	url := item.ResolvedURL
+	if url == "" {
+		url = item.GivenURL
+	}
+	return url
 }
 
-// Title is an alias for ResolvedTitle
+// Title returns ResolvedTitle or GivenTitle
 func (item Item) Title() string {
-	return item.ResolvedTitle
+	title := item.ResolvedTitle
+	if title == "" {
+		title = item.GivenTitle
+	}
+	return title
 }
 
 // Retrieve returns the in Pocket
