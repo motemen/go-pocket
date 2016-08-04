@@ -43,6 +43,7 @@ func doJSON(req *http.Request, res interface{}) error {
 		return fmt.Errorf("got response %d; X-Error=[%s]", resp.StatusCode, resp.Header.Get("X-Error"))
 	}
 
+	defer resp.Body.Close()
 	return json.NewDecoder(resp.Body).Decode(res)
 }
 
