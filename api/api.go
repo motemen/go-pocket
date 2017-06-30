@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-// The API origin
-var Origin = "https://getpocket.com"
+// Origin is the constant origin URL for the Pocket API
+const Origin = "https://getpocket.com"
 
 // Client represents a Pocket client that grants OAuth access to your application
 type Client struct {
