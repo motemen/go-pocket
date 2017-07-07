@@ -10,9 +10,8 @@ import (
 // Origin is the constant origin URL for the Pocket API
 const Origin = "https://getpocket.com"
 
-// DefaultClient is the client used for making all request, defaulting to
-// http.DefaultClient
-var DefaultClient = http.DefaultClient
+// DefaultClient is the client used for making all requests
+var DefaultClient *http.Client
 
 // Client represents a Pocket client that grants OAuth access to your application
 type Client struct {
