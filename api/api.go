@@ -10,7 +10,9 @@ import (
 // Origin is the constant origin URL for the Pocket API
 const Origin = "https://getpocket.com"
 
-var httpClient = http.DefaultClient
+// DefaultClient is the client used for making all request, defaulting to
+// http.DefaultClient
+var DefaultClient = http.DefaultClient
 
 // Client represents a Pocket client that grants OAuth access to your application
 type Client struct {
@@ -35,14 +37,14 @@ func NewClient(consumerKey, accessToken string) *Client {
 // SetHTTPClient updates the package HTTP client.
 // Useful in cases where we need to use alternative clients "google.golang.org/appengine/urlfetch"
 func SetHTTPClient(c *http.Client) {
-	httpClient = c
+	DefaultClient = c
 }
 
 func doJSON(req *http.Request, res interface{}) error {
 	req.Header.Add("X-Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := httpClient.Do(req)
+	resp, err := DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
