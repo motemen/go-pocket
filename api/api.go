@@ -7,8 +7,11 @@ import (
 	"net/http"
 )
 
-// The API origin
+// Origin is the constant origin URL for the Pocket API
 var Origin = "https://getpocket.com"
+
+// DefaultClient is the client used for making all requests
+var DefaultClient = http.DefaultClient
 
 // Client represents a Pocket client that grants OAuth access to your application
 type Client struct {
@@ -34,7 +37,7 @@ func doJSON(req *http.Request, res interface{}) error {
 	req.Header.Add("X-Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
