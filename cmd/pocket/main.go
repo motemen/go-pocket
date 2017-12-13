@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -175,12 +176,27 @@ func commandAdd(arguments map[string]interface{}, client *api.Client) {
 }
 
 func getConsumerKey() string {
-	consumerKeyFileContent, err := ioutil.ReadFile(filepath.Join(configDir, "consumer_key"))
+	consumerKeyPath := filepath.Join(configDir, "consumer_key")
+	consumerKey, err := ioutil.ReadFile(consumerKeyPath)
+
 	if err != nil {
-		panic(err)
+		log.Printf("Can't get consumer key: %v", err)
+		log.Print("Enter your consumer key (from here https://getpocket.com/developer/apps/): ")
+
+		consumerKey, _, err = bufio.NewReader(os.Stdin).ReadLine()
+		if err != nil {
+			panic(err)
+		}
+
+		err = ioutil.WriteFile(consumerKeyPath, consumerKey, 0600)
+		if err != nil {
+			panic(err)
+		}
+
+		return string(consumerKey)
 	}
 
-	return string(bytes.SplitN(consumerKeyFileContent, []byte("\n"), 2)[0])
+	return string(bytes.SplitN(consumerKey, []byte("\n"), 2)[0])
 }
 
 func restoreAccessToken(consumerKey string) (*auth.Authorization, error) {
